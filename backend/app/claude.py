@@ -99,7 +99,7 @@ def _parse_schedules(raw: str) -> list[dict]:
 
 
 async def _invoke_claude(model_id: str, prompt: str, max_tokens: int) -> tuple[str, dict]:
-    client = AsyncAnthropic()
+    client = AsyncAnthropic(api_key=get_settings().anthropic_api_key)
     t0 = time.monotonic()
     resp = await client.messages.create(
         model=model_id,
