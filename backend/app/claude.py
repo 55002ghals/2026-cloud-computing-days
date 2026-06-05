@@ -202,6 +202,14 @@ class ClaudeClient:
         )
         text, meta = await _invoke_claude(self._model_id, prompt, max_tokens=4096)
         raw = text.strip()
+        fence_match = re.search(r"```(?:json)?\s*(.*?)```", raw, re.DOTALL)
+        if fence_match:
+            raw = fence_match.group(1).strip()
+        else:
+            start = raw.find("{")
+            end = raw.rfind("}")
+            if start != -1 and end != -1 and end > start:
+                raw = raw[start : end + 1]
         parsed = json.loads(raw)
         title = parsed["title"]
         ps = date.fromisoformat(parsed["period_start"])
