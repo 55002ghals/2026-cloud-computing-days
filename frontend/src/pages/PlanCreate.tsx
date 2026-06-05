@@ -339,6 +339,17 @@ export function PlanCreate() {
         {loading ? <Spinner size={20} color="var(--paper-pure)" /> : null}
         AI 생성
       </button>
+      <p
+        style={{
+          margin: '10px 0 0',
+          textAlign: 'center',
+          fontSize: 13,
+          color: 'var(--ink-muted)',
+          fontFamily: 'var(--font-sans)',
+        }}
+      >
+        생성에 최대 3분 정도 걸릴 수 있어요.
+      </p>
     </div>
   );
 }
