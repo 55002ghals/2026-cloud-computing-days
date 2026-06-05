@@ -229,11 +229,47 @@ class ClaudeClient:
             raise PlanParseError(
                 f"Claude가 유효하지 않은 JSON을 반환했습니다 ({e.msg} at line {e.lineno})"
             ) from e
-        title = parsed["title"]
-        ps = date.fromisoformat(parsed["period_start"])
-        pe = date.fromisoformat(parsed["period_end"])
-        days = [
-            {"date": date.fromisoformat(d["date"]), "todos": d["todos"]}
-            for d in parsed["days"]
-        ]
+        try:
+            title = parsed["title"]
+            ps = date.fromisoformat(parsed["period_start"])
+            pe = date.fromisoformat(parsed["period_end"])
+            raw_days = parsed["days"]
+        except (KeyError, TypeError, ValueError) as e:
+            logger.error(
+                "generate_plan: missing/invalid top-level fields (%s). raw response: %s",
+                e,
+                raw_full[:2000],
+            )
+            raise PlanParseError(
+                f"Claude 응답에 필수 필드가 없거나 형식이 잘못되었습니다 ({e})"
+            ) from e
+
+        if not isinstance(raw_days, list) or not raw_days:
+            logger.error(
+                "generate_plan: empty/invalid days. raw response: %s", raw_full[:2000]
+            )
+            raise PlanParseError("Claude가 빈 일별 계획을 반환했습니다 — 다시 시도해 주세요")
+
+        days: list[dict] = []
+        for d in raw_days:
+            try:
+                day_date = date.fromisoformat(d["date"])
+                todos = d["todos"]
+            except (KeyError, TypeError, ValueError) as e:
+                logger.error(
+                    "generate_plan: invalid day entry %r (%s). raw response: %s",
+                    d, e, raw_full[:2000],
+                )
+                raise PlanParseError(f"Claude 응답의 일별 항목이 잘못되었습니다 ({e})") from e
+            if not isinstance(todos, list) or not todos or not all(
+                isinstance(t, str) and t.strip() for t in todos
+            ):
+                logger.error(
+                    "generate_plan: day %s has empty/invalid todos %r. raw: %s",
+                    day_date, todos, raw_full[:2000],
+                )
+                raise PlanParseError(
+                    f"{day_date}의 todo 목록이 비어있거나 잘못되었습니다 — 다시 시도해 주세요"
+                )
+            days.append({"date": day_date, "todos": todos})
         return title, ps, pe, days, meta
