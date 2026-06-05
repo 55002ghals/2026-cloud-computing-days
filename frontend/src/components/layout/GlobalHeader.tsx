@@ -8,18 +8,14 @@ export function GlobalHeader() {
   return (
     <header
       style={{
-        position: "fixed",
-        top: 0,
-        left: "50%",
-        transform: "translateX(-50%)",
         width: "100%",
         maxWidth: 480,
+        margin: "0 auto",
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
         padding: "12px 16px",
         minHeight: 52,
-        zIndex: 90,
         background: "transparent",
         pointerEvents: "none",
       }}

@@ -6,7 +6,7 @@ import { TodayDiaryCard } from "../components/hub/TodayDiaryCard";
 import { SearchTriggerCard } from "../components/hub/SearchTriggerCard";
 import { DailyTodoCard } from "../components/hub/DailyTodoCard";
 
-import { PlantVideoCard, type PlantState } from "../components/hub/PlantVideoCard";
+import { type PlantState } from "../components/hub/PlantVideoCard";
 import { PlantVideoCardV2 } from "../components/hub/PlantVideoCardV2";
 import { getWeekWindow, type CalendarEntry } from "../lib/week";
 import { fetchStreak } from "../lib/streak";
@@ -23,7 +23,6 @@ export function Hub() {
   const [entries, setEntries] = useState<CalendarEntry[]>([]);
   const [diaryBody, setDiaryBody] = useState<string | null>(null);
   const [streak, setStreak] = useState<number | null>(null);
-  const [plantDesign, setPlantDesign] = useState<1 | 2>(1);
   const [plans, setPlans] = useState<PlanOut[]>([]);
   const [activeTodayTodos, setActiveTodayTodos] = useState(0);
 
@@ -101,25 +100,6 @@ export function Hub() {
         padding: "16px 16px 8px",
       }}
     >
-      {/* 임시 디자인 토글 */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 4 }}>
-        {([1, 2] as const).map(v => (
-          <button
-            key={v}
-            onClick={() => setPlantDesign(v)}
-            style={{
-              padding: '3px 10px', border: '1px solid var(--line)',
-              borderRadius: 'var(--r-pill)', cursor: 'pointer',
-              font: '500 11px/1 var(--font-sans)',
-              background: plantDesign === v ? 'var(--sage-leaf)' : 'transparent',
-              color: plantDesign === v ? 'var(--paper-pure)' : 'var(--ink-hint)',
-            }}
-          >
-            V{v}
-          </button>
-        ))}
-      </div>
-
       {streak !== null && streak > 0 && (
         <div
           style={{
@@ -161,9 +141,7 @@ export function Hub() {
         activeTodayTodos={activeTodayTodos}
       />
 
-      {plantDesign === 1
-        ? <PlantVideoCard plantState={plantTestOverride.state ?? plantState} season={plantTestOverride.season ?? undefined} />
-        : <PlantVideoCardV2 plantState={plantTestOverride.state ?? plantState} season={plantTestOverride.season ?? undefined} />}
+      <PlantVideoCardV2 plantState={plantTestOverride.state ?? plantState} season={plantTestOverride.season ?? undefined} />
     </div>
   );
 }

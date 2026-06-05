@@ -16,8 +16,8 @@ const SEASON_VIDEO: Record<Season, Record<PlantState, string>> = {
   },
   autumn: {
     1: '/videos/plant-autumn.mp4',
-    2: '/videos/plant-autumn.mp4',
-    3: '/videos/plant-autumn.mp4',
+    2: '/videos/plant-autumn-2.mp4',
+    3: '/videos/plant-autumn-3.mp4',
   },
   winter: {
     1: '/videos/plant-winter.mp4',

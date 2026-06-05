@@ -18,6 +18,7 @@ import { PlanDetail } from './pages/PlanDetail'
 import { PlanEdit } from './pages/PlanEdit'
 import { PlanDayDetail } from './pages/PlanDayDetail'
 import { TasteSurvey } from './pages/TasteSurvey'
+import { Recommend } from './pages/Recommend'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { AppLayout } from './components/AppLayout'
 import { useMockDate } from './hooks/useMockDate'
@@ -51,6 +52,7 @@ export default function App() {
         <Route path="/plans/:planId/day/:date" element={<ProtectedRoute><AppLayout><PlanDayDetail /></AppLayout></ProtectedRoute>} />
         <Route path="/plans/:planId" element={<ProtectedRoute><AppLayout><PlanDetail /></AppLayout></ProtectedRoute>} />
         <Route path="/plans" element={<ProtectedRoute><AppLayout><Plans /></AppLayout></ProtectedRoute>} />
+        <Route path="/recommend" element={<ProtectedRoute><AppLayout><Recommend /></AppLayout></ProtectedRoute>} />
         <Route path="/share/:token" element={<Share />} />
         <Route path="*" element={<Navigate to="/hub" replace />} />
       </Routes>

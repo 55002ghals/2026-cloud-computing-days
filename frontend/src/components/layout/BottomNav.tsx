@@ -19,6 +19,12 @@ const NAV_ITEMS: NavItem[] = [
     path: (today) => `/diary/${today}`,
   },
   {
+    label: "추천",
+    icon: "sparkles",
+    match: "/recommend",
+    path: () => "/recommend",
+  },
+  {
     label: "홈",
     icon: "home",
     match: "/hub",

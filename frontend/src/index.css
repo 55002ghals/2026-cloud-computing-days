@@ -570,3 +570,11 @@ a:hover {
     transform: translateX(0);
   }
 }
+@keyframes sheet-up {
+  from {
+    transform: translateX(-50%) translateY(100%);
+  }
+  to {
+    transform: translateX(-50%) translateY(0);
+  }
+}

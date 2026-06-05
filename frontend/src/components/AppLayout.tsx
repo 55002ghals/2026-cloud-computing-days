@@ -16,7 +16,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
   return (
     <div style={{ background: BG_CLOUDS, minHeight: "100dvh" }}>
       <GlobalHeader />
-      <ScreenContainer style={{ paddingTop: 52, paddingBottom: 80 }}>
+      <ScreenContainer style={{ paddingTop: 0, paddingBottom: 80 }}>
         <SwipeablePages>
           <main style={{ flex: 1, minWidth: 0 }}>{children}</main>
         </SwipeablePages>
