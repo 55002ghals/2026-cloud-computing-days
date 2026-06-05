@@ -33,7 +33,7 @@ const mockPlan: PlanWithTodosOut = {
 
 describe('PlanCreate 페이지', () => {
   beforeEach(() => {
-    vi.mocked(plansApi.generatePlan).mockResolvedValue(mockPlan);
+    vi.mocked(plansApi.generatePlanStream).mockResolvedValue(mockPlan);
     mockNavigate.mockClear();
   });
 
@@ -67,7 +67,7 @@ describe('PlanCreate 페이지', () => {
     fireEvent.change(screen.getByLabelText(/종료일/), { target: { value: '2026-06-07' } });
     fireEvent.click(screen.getByRole('button', { name: /AI 생성/ }));
     await waitFor(() => {
-      expect(plansApi.generatePlan).toHaveBeenCalledWith({
+      expect(plansApi.generatePlanStream).toHaveBeenCalledWith({
         description: '테스트 설명',
         period_start: '2026-06-01',
         period_end: '2026-06-07',

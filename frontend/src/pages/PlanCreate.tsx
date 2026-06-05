@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { generatePlan } from '../api/plans';
+import { generatePlanStream } from '../api/plans';
 import type { PlanWithTodosOut } from '../lib/plans';
 import { todosByDate } from '../lib/plans';
 import Spinner from '../components/Spinner';
@@ -46,7 +46,7 @@ export function PlanCreate() {
     setLoading(true);
     setError(null);
     try {
-      const result = await generatePlan({
+      const result = await generatePlanStream({
         description: description.trim(),
         period_start: periodStart,
         period_end: periodEnd,

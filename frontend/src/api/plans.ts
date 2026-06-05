@@ -1,4 +1,5 @@
 import client from './client';
+import { postSSE } from './sseClient';
 import type {
   PlanOut,
   PlanWithTodosOut,
@@ -37,6 +38,19 @@ export async function deletePlan(planId: number): Promise<void> {
 export async function generatePlan(input: PlanGenerateInput): Promise<PlanWithTodosOut> {
   const res = await client.post<PlanWithTodosOut>('/plans/generate', input);
   return res.data;
+}
+
+export function generatePlanStream(
+  input: PlanGenerateInput,
+  onStatus?: (step: string) => void,
+): Promise<PlanWithTodosOut> {
+  return new Promise((resolve, reject) => {
+    postSSE('/api/plans/generate-stream', input, {
+      onStatus: (step) => onStatus?.(step),
+      onDone: (data) => resolve(data as PlanWithTodosOut),
+      onError: (err) => reject(err),
+    });
+  });
 }
 
 export async function listPlansForCalendar(start: string, end: string): Promise<PlanWithTodosOut[]> {

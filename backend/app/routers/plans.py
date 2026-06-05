@@ -1,8 +1,12 @@
+import asyncio
+import json
 from datetime import date, datetime, timedelta, timezone
+from typing import AsyncGenerator
 
 from app.time_kst import kst_today
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -220,6 +224,116 @@ async def generate_plan_with_ai(
     )
     plan = result.scalars().first()
     return _plan_with_todos_out(plan)
+
+
+def _sse_event(event: str, data: dict) -> str:
+    return f"event: {event}\ndata: {json.dumps(data, ensure_ascii=False, default=str)}\n\n"
+
+
+@router.post("/generate-stream")
+async def generate_plan_with_ai_stream(
+    body: PlanGenerateInput,
+    user_id: int = Depends(require_session),
+    db: AsyncSession = Depends(get_db),
+):
+    async def _generate() -> AsyncGenerator[str, None]:
+        # Validation
+        if not (1 <= len(body.description) <= 2000):
+            yield _sse_event("error", {"detail": "description must be 1-2000 chars", "status_code": 422})
+            return
+        if not (1 <= len(body.goal) <= 500):
+            yield _sse_event("error", {"detail": "goal must be 1-500 chars", "status_code": 422})
+            return
+        if body.period_end < body.period_start:
+            yield _sse_event("error", {"detail": "period_end must be >= period_start", "status_code": 422})
+            return
+        if (body.period_end - body.period_start).days > 90:
+            yield _sse_event("error", {"detail": "period must be <= 90 days", "status_code": 422})
+            return
+
+        profile_result = await db.execute(select(UserProfile).where(UserProfile.user_id == user_id))
+        profile = profile_result.scalar_one_or_none()
+        user_profile = (
+            {
+                "nickname": profile.nickname,
+                "occupation": profile.occupation,
+                "hobbies": profile.hobbies,
+                "interests": profile.interests,
+            }
+            if profile
+            else None
+        )
+
+        yield _sse_event("status", {"step": "generating"})
+
+        claude_task = asyncio.create_task(
+            _get_claude().generate_plan(
+                description=body.description,
+                period_start=body.period_start,
+                period_end=body.period_end,
+                goal=body.goal,
+                user_profile=user_profile,
+            )
+        )
+
+        # Keepalive every 10s while Claude works — keeps CloudFront from
+        # timing out (default origin response timeout is 30-60s).
+        while not claude_task.done():
+            try:
+                await asyncio.wait_for(asyncio.shield(claude_task), timeout=10)
+            except asyncio.TimeoutError:
+                yield _sse_event("status", {"step": "generating"})
+
+        try:
+            title, ps, pe, days, meta = claude_task.result()
+        except PlanParseError as e:
+            yield _sse_event("error", {"detail": str(e), "status_code": 502})
+            return
+        except Exception as e:
+            yield _sse_event("error", {"detail": f"AI 호출 중 오류: {e}", "status_code": 500})
+            return
+
+        yield _sse_event("status", {"step": "saving"})
+
+        plan = Plan(
+            user_id=user_id,
+            title=title,
+            description_input=body.description,
+            goal_input=body.goal,
+            period_start=ps,
+            period_end=pe,
+            source="ai",
+            ai_meta=meta,
+        )
+        db.add(plan)
+        await db.flush()
+
+        for day_entry in days:
+            for j, todo_content in enumerate(day_entry["todos"]):
+                db.add(PlanTodo(
+                    plan_id=plan.id,
+                    todo_date=day_entry["date"],
+                    sequence=j + 1,
+                    content=todo_content,
+                ))
+
+        await db.commit()
+
+        result = await db.execute(
+            select(Plan).options(selectinload(Plan.todos)).where(Plan.id == plan.id)
+        )
+        plan = result.scalars().first()
+        payload = _plan_with_todos_out(plan).model_dump(mode="json")
+        yield _sse_event("done", payload)
+
+    return StreamingResponse(
+        _generate(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+        },
+    )
 
 
 @router.get("/{plan_id}", response_model=PlanWithTodosOut)
