@@ -30,15 +30,6 @@ const CATEGORIES = [
   { id: "lover",  label: "연인", sublabel: "AI 연인 매칭",       img: "/recommend/연인.png",  unlockLevel: 6 },
 ];
 
-const MUSIC_LIST = [
-  { id: 1, title: "Gravity",              artist: "John Mayer",        mood: "차분한",     color: "#E8D4B0" },
-  { id: 2, title: "Skinny Love",          artist: "Bon Iver",          mood: "감성적인",   color: "#B0C8E8" },
-  { id: 3, title: "Bloom",               artist: "The Paper Kites",   mood: "포근한",     color: "#C8E8B0" },
-  { id: 4, title: "마음이 외로워지면",     artist: "아이유",             mood: "위로가 되는", color: "#E8C8B0" },
-  { id: 5, title: "Holocene",            artist: "Bon Iver",          mood: "서정적인",   color: "#B0E8D4" },
-  { id: 6, title: "Lua",                 artist: "Bright Eyes",       mood: "내면적인",   color: "#D0B0E8" },
-  { id: 7, title: "한 페이지가 될 수 있게", artist: "DAY6",             mood: "설레는",     color: "#E8B0C8" },
-];
 
 const COMING_SOON: Record<string, { desc: string }> = {
   book:   { desc: "AI가 일기 속 감정과 관심사를 분석해\n딱 맞는 책을 골라드릴 거예요." },
