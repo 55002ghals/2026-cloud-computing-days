@@ -1,9 +1,16 @@
 import json
+import logging
 import re
 import time
 from datetime import date
 from functools import lru_cache
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
+
+
+class PlanParseError(Exception):
+    pass
 
 from anthropic import AsyncAnthropic
 
@@ -201,7 +208,8 @@ class ClaudeClient:
             user_profile=profile_block,
         )
         text, meta = await _invoke_claude(self._model_id, prompt, max_tokens=4096)
-        raw = text.strip()
+        raw_full = text.strip()
+        raw = raw_full
         fence_match = re.search(r"```(?:json)?\s*(.*?)```", raw, re.DOTALL)
         if fence_match:
             raw = fence_match.group(1).strip()
@@ -210,7 +218,17 @@ class ClaudeClient:
             end = raw.rfind("}")
             if start != -1 and end != -1 and end > start:
                 raw = raw[start : end + 1]
-        parsed = json.loads(raw)
+        try:
+            parsed = json.loads(raw)
+        except json.JSONDecodeError as e:
+            logger.error(
+                "generate_plan: JSON parse failed (%s). raw response: %s",
+                e,
+                raw_full[:2000],
+            )
+            raise PlanParseError(
+                f"Claude가 유효하지 않은 JSON을 반환했습니다 ({e.msg} at line {e.lineno})"
+            ) from e
         title = parsed["title"]
         ps = date.fromisoformat(parsed["period_start"])
         pe = date.fromisoformat(parsed["period_end"])

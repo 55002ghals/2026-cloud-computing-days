@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.auth import require_session
-from app.claude import ClaudeClient
+from app.claude import ClaudeClient, PlanParseError
 from app.db import get_db
 from app.models import Plan, PlanTodo, UserProfile
 from app.schemas import (
@@ -180,13 +180,16 @@ async def generate_plan_with_ai(
         else None
     )
 
-    title, ps, pe, days, meta = await _get_claude().generate_plan(
-        description=body.description,
-        period_start=body.period_start,
-        period_end=body.period_end,
-        goal=body.goal,
-        user_profile=user_profile,
-    )
+    try:
+        title, ps, pe, days, meta = await _get_claude().generate_plan(
+            description=body.description,
+            period_start=body.period_start,
+            period_end=body.period_end,
+            goal=body.goal,
+            user_profile=user_profile,
+        )
+    except PlanParseError as e:
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(e))
 
     plan = Plan(
         user_id=user_id,
