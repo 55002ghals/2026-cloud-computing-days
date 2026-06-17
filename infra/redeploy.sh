@@ -42,13 +42,13 @@ sudo -u ec2-user .venv/bin/pip install -r requirements.txt
 
 echo "==> [4/8] Verifying Database Context..."
 cd /opt/app/backend
-.venv/bin/python3 -u -c "
+.venv/bin/python3 -u << 'PYEOF'
 import asyncio, asyncpg, re
 
 def read_env(key):
     with open('/etc/qna-diary/env') as f:
         for line in f:
-            m = re.match(rf'^{key}=[\"\'']?([^\"\''\n]+)[\"\'']?', line.strip())
+            m = re.match(rf'^{key}=["\']?([^"\'\n]+)["\']?', line.strip())
             if m:
                 return m.group(1)
     return ''
@@ -61,19 +61,19 @@ async def init_database():
     base_url = raw.replace('postgresql+asyncpg://', 'postgresql://').rsplit('/', 1)[0] + '/postgres'
     try:
         conn = await asyncpg.connect(base_url)
-        exists = await conn.fetchval(\"SELECT EXISTS(SELECT 1 FROM pg_database WHERE datname = 'qnadiary')\")
+        exists = await conn.fetchval("SELECT EXISTS(SELECT 1 FROM pg_database WHERE datname = 'qnadiary')")
         if not exists:
             await conn.execute('COMMIT')
             await conn.execute('CREATE DATABASE qnadiary')
-            print(\"Success: 'qnadiary' database created.\", flush=True)
+            print("Success: 'qnadiary' database created.", flush=True)
         else:
-            print(\"Info: 'qnadiary' database already exists.\", flush=True)
+            print("Info: 'qnadiary' database already exists.", flush=True)
         await conn.close()
     except Exception as e:
         print(f'Warning: {e}', flush=True)
 
 asyncio.run(init_database())
-"
+PYEOF
 
 echo "==> [5/8] Building Frontend Assets..."
 cd /opt/app/frontend
